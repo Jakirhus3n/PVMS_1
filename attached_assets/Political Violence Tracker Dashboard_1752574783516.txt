@@ -1,0 +1,1251 @@
+Name : Political Violence Tracker Dashboard
+
+
+import React, { useState, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Input } from './ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Separator } from './ui/separator';
+import { Progress } from './ui/progress';
+import { ScrollArea } from './ui/scroll-area';
+import { 
+  Calendar, Users, MapPin, TrendingUp, Filter, Eye, Globe, Bot, Clock, 
+  ExternalLink, Activity, Database, Search, AlertTriangle, Shield, Camera,
+  RefreshCw, Bell, Download, Share2, Info, ChevronDown, ChevronUp,
+  Zap, Target, BarChart3, PieChart, Map, List, Grid, Settings
+} from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area } from 'recharts';
+
+// Bangladesh Administrative Divisions
+const divisions = {
+  'ঢাকা': ['ঢাকা', 'ফরিদপুর', 'গাজীপুর', 'গোপালগঞ্জ', 'কিশোরগঞ্জ', 'মাদারীপুর', 'মানিকগঞ্জ', 'মুন্সিগঞ্জ', 'নারায়ণগঞ্জ', 'নরসিংদী', 'রাজবাড়ী', 'শরীয়তপুর', 'টাঙ্গাইল'],
+  'চট্টগ্রাম': ['চট্টগ্রাম', 'বান্দরবান', 'ব্রাহ্মণবাড়িয়া', 'চাঁদপুর', 'কুমিল্লা', 'কক্সবাজার', 'ফেনী', 'খাগড়াছড়ি', 'লক্ষ্মীপুর', 'নোয়াখালী', 'রাঙ্গামাটি'],
+  'রাজশাহী': ['রাজশাহী', 'বগুড়া', 'জয়পুরহাট', 'নওগাঁ', 'নাটোর', 'চাঁপাইনবাবগঞ্জ', 'পাবনা', 'সিরাজগঞ্জ'],
+  'খুলনা': ['খুলনা', 'বাগেরহাট', 'চুয়াডাঙ্গা', 'যশোর', 'ঝিনাইদহ', 'কুষ্টিয়া', 'মাগুরা', 'মেহেরপুর', 'নড়াইল', 'সাতক্ষীরা'],
+  'বরিশাল': ['বরিশাল', 'বরগুনা', 'ভোলা', 'ঝালকাঠি', 'পটুয়াখালী', 'পিরোজপুর'],
+  'সিলেট': ['সিলেট', 'হবিগঞ্জ', 'মৌলভীবাজার', 'সুনামগঞ্জ'],
+  'রংপুর': ['রংপুর', 'দিনাজপুর', 'গাইবান্ধা', 'কুড়িগ্রাম', 'লালমনিরহাট', 'নীলফামারী', 'পঞ্চগড়', 'ঠাকুরগাঁও'],
+  'ময়মনসিংহ': ['ময়মনসিংহ', 'জামালপুর', 'নেত্রকোনা', 'শেরপুর']
+};
+
+// Enhanced mock data with more realistic data
+const mockIncidents = [
+  {
+    id: 1,
+    date: '2025-01-15',
+    division: 'ঢাকা',
+    district: 'ঢাকা',
+    upazila: 'ধানমন্ডি',
+    policeStation: 'ধানমন্ডি থানা',
+    location: 'ঢাকা, ধানমন্ডি, ৩২ নম্বর রোড',
+    coordinates: { lat: 23.7465, lng: 90.3768 },
+    party: 'বাংলাদেশ আওয়ামী লীগ',
+    injured: 8,
+    killed: 2,
+    description: 'দলীয় কার্যালয়ের সামনে প্রতিপক্ষীয় গ্রুপের পরিকল্পিত আক্রমণে রক্তক্ষয়ী সংঘর্ষ। স্থানীয় নেতাদের মধ্যে ক্ষমতার দ্বন্দ্ব থেকে এই ঘটনার সূত্রপাত।',
+    severity: 'high',
+    images: [
+      'https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=400',
+      'https://images.unsplash.com/photo-1588681664899-f142ff2dc9b1?w=400'
+    ],
+    newsSource: 'প্রথম আলো',
+    sourceUrl: 'https://www.prothomalo.com/politics/news-1',
+    aiAnalysis: {
+      confidence: 0.94,
+      keyEntities: ['ধানমন্ডি', 'আওয়ামী লীগ', 'সংঘর্ষ'],
+      sentiment: 'very_negative',
+      processedAt: '2025-01-15T10:30:00Z',
+      extractedInfo: {
+        casualties: { killed: 2, injured: 8 },
+        locationConfidence: 0.96,
+        partyConfidence: 0.92,
+        violenceType: 'দলীয় সংঘর্ষ'
+      }
+    },
+    crawledAt: '2025-01-15T09:15:00Z',
+    lastUpdated: '2025-01-15T11:00:00Z',
+    witnesses: ['স্থানীয় দোকানদার', 'পথচারী'],
+    policeResponse: 'ঘটনাস্থলে অতিরিক্ত পুলিশ মোতায়েন',
+    tags: ['দলীয় সংঘর্ষ', 'ধানমন্ডি', 'উচ্চ তীব্রতা']
+  },
+  {
+    id: 2,
+    date: '2025-01-14',
+    division: 'চট্টগ্রাম',
+    district: 'চট্টগ্রাম',
+    upazila: 'পাঁচলাইশ',
+    policeStation: 'পাঁচলাইশ থানা',
+    location: 'চট্টগ্রাম, পাঁচলাইশ, আগ্রাবাদ সি/এ',
+    coordinates: { lat: 22.3569, lng: 91.7832 },
+    party: 'বাংলাদেশ জাতীয়তাবাদী দল',
+    injured: 12,
+    killed: 1,
+    description: 'হরতাল সমর্থনে বিএনপির শান্তিপূর্ণ মিছিলে পুলিশের লাঠিচার্জ ও টিয়ার গ্যাস নিক্ষেপে উত্তেজনা বৃদ্ধি।',
+    severity: 'high',
+    images: ['https://images.unsplash.com/photo-1590736969955-71cc94901144?w=400'],
+    newsSource: 'যুগান্তর',
+    sourceUrl: 'https://www.jugantor.com/politics/news-2',
+    aiAnalysis: {
+      confidence: 0.87,
+      keyEntities: ['চট্টগ্রাম', 'বিএনপি', 'হরতাল', 'পুলিশ'],
+      sentiment: 'very_negative',
+      processedAt: '2025-01-14T14:20:00Z',
+      extractedInfo: {
+        casualties: { killed: 1, injured: 12 },
+        locationConfidence: 0.89,
+        partyConfidence: 0.95,
+        violenceType: 'পুলিশি বাহিনীর সাথে সংঘর্ষ'
+      }
+    },
+    crawledAt: '2025-01-14T13:45:00Z',
+    lastUpdated: '2025-01-14T15:30:00Z',
+    witnesses: ['সাংবাদিক', 'স্থানীয় ব্যবসায়ী'],
+    policeResponse: 'আরও বেশি টিয়ার গ্যাস নিক্ষেপ',
+    tags: ['হরতাল', 'পুলিশি সংঘর্ষ', 'চট্টগ্রাম']
+  },
+  {
+    id: 3,
+    date: '2025-01-13',
+    division: 'রাজশাহী',
+    district: 'রাজশাহী',
+    upazila: 'রাজশাহী সদর',
+    policeStation: 'শাহ মখদুম থানা',
+    location: 'রাজশাহী, রাজশাহী সদর, শাহেব বাজার',
+    coordinates: { lat: 24.3745, lng: 88.6042 },
+    party: 'জাতীয় পার্টি',
+    injured: 6,
+    killed: 0,
+    description: 'স্থানীয় নেতাদের মধ্যে দলীয় দ্বন্দ্ব ও ক্ষমতার লড়াইয়ে সংঘর্ষ।',
+    severity: 'medium',
+    images: ['https://images.unsplash.com/photo-1590736969955-71cc94901144?w=400'],
+    newsSource: 'সমকাল',
+    sourceUrl: 'https://www.samakal.com/politics/news-3',
+    aiAnalysis: {
+      confidence: 0.82,
+      keyEntities: ['রাজশাহী', 'জাতীয় পার্টি', 'দলীয় দ্বন্দ্ব'],
+      sentiment: 'negative',
+      processedAt: '2025-01-13T12:30:00Z',
+      extractedInfo: {
+        casualties: { killed: 0, injured: 6 },
+        locationConfidence: 0.85,
+        partyConfidence: 0.79,
+        violenceType: 'অভ্যন্তরীণ দলীয় সংঘর্ষ'
+      }
+    },
+    crawledAt: '2025-01-13T11:45:00Z',
+    lastUpdated: '2025-01-13T13:20:00Z',
+    witnesses: ['দলীয় কর্মী', 'স্থানীয় অধিবাসী'],
+    policeResponse: 'মধ্যস্থতার চেষ্টা',
+    tags: ['দলীয় দ্বন্দ্ব', 'রাজশাহী', 'মধ্যম তীব্রতা']
+  },
+  {
+    id: 4,
+    date: '2025-01-12',
+    division: 'খুলনা',
+    district: 'খুলনা',
+    upazila: 'দৌলতপুর',
+    policeStation: 'দৌলতপুর থানা',
+    location: 'খুলনা, দৌলতপুর, আইরন বাজার',
+    coordinates: { lat: 22.8456, lng: 89.5403 },
+    party: 'বাংলাদেশ জাতীয়তাবাদী দল',
+    injured: 18,
+    killed: 3,
+    description: 'পৌরসভা নির্বাচনে দুই প্রতিদ্বন্দ্বী গ্রুপের মধ্যে প্রাণঘাতী সংঘর্ষ।',
+    severity: 'high',
+    images: ['https://images.unsplash.com/photo-1586339949916-3e9457bef6d3?w=400'],
+    newsSource: 'বাংলা ট্রিবিউন',
+    sourceUrl: 'https://www.banglatribune.com/politics/news-4',
+    aiAnalysis: {
+      confidence: 0.96,
+      keyEntities: ['খুলনা', 'বিএনপি', 'পৌর নির্বাচন', 'ভোট কেন্দ্র'],
+      sentiment: 'very_negative',
+      processedAt: '2025-01-12T18:20:00Z',
+      extractedInfo: {
+        casualties: { killed: 3, injured: 18 },
+        locationConfidence: 0.97,
+        partyConfidence: 0.94,
+        violenceType: 'নির্বাচনী সহিংসতা'
+      }
+    },
+    crawledAt: '2025-01-12T17:30:00Z',
+    lastUpdated: '2025-01-12T19:45:00Z',
+    witnesses: ['নির্বাচন কমিশনের অফিসার', 'ভোটার'],
+    policeResponse: 'অতিরিক্ত ইউনিট মোতায়েন',
+    tags: ['নির্বাচনী সহিংসতা', 'খুলনা', 'উচ্চ তীব্রতা']
+  },
+  {
+    id: 5,
+    date: '2025-01-11',
+    division: 'বরিশাল',
+    district: 'বরিশাল',
+    upazila: 'বরিশাল সদর',
+    policeStation: 'কোতোয়ালী থানা',
+    location: 'বরিশাল, বরিশাল সদর, বন্দর রোড',
+    coordinates: { lat: 22.7010, lng: 90.3535 },
+    party: 'বাংলাদেশের কমিউনিস্ট পার্টি',
+    injured: 7,
+    killed: 0,
+    description: 'শ্রমিক অধিকার নিয়ে সমাবেশে বিরোধী দলের হামলা ও পুলিশের হস্তক্ষেপ।',
+    severity: 'medium',
+    images: ['https://images.unsplash.com/photo-1590736969955-71cc94901144?w=400'],
+    newsSource: 'মানবজমিন',
+    sourceUrl: 'https://www.manabzamin.com/politics/news-5',
+    aiAnalysis: {
+      confidence: 0.78,
+      keyEntities: ['বরিশাল', 'কমিউনিস্ট পার্টি', 'শ্রমিক সমাবেশ'],
+      sentiment: 'negative',
+      processedAt: '2025-01-11T14:15:00Z',
+      extractedInfo: {
+        casualties: { killed: 0, injured: 7 },
+        locationConfidence: 0.81,
+        partyConfidence: 0.75,
+        violenceType: 'শ্রমিক আন্দোলন সহিংসতা'
+      }
+    },
+    crawledAt: '2025-01-11T13:20:00Z',
+    lastUpdated: '2025-01-11T15:00:00Z',
+    witnesses: ['শ্রমিক নেতা', 'ট্রেড ইউনিয়ন কর্মী'],
+    policeResponse: 'সমাবেশ ভেঙে দেওয়া',
+    tags: ['শ্রমিক আন্দোলন', 'বরিশাল', 'মধ্যম তীব্রতা']
+  }
+];
+
+const newsSources = [
+  { name: 'প্রথম আলো', url: 'prothomalo.com', status: 'active', type: 'national', lastCrawled: '2025-01-15T08:00:00Z', dailyArticles: 1200, reliability: 95 },
+  { name: 'বাংলা ট্রিবিউন', url: 'banglatribune.com', status: 'active', type: 'national', lastCrawled: '2025-01-15T08:05:00Z', dailyArticles: 800, reliability: 92 },
+  { name: 'যুগান্তর', url: 'jugantor.com', status: 'active', type: 'national', lastCrawled: '2025-01-15T08:10:00Z', dailyArticles: 900, reliability: 90 },
+  { name: 'কালের কণ্ঠ', url: 'kalerkantho.com', status: 'active', type: 'national', lastCrawled: '2025-01-15T08:15:00Z', dailyArticles: 1100, reliability: 93 },
+  { name: 'সমকাল', url: 'samakal.com', status: 'active', type: 'national', lastCrawled: '2025-01-15T08:20:00Z', dailyArticles: 950, reliability: 91 },
+  { name: 'দৈনিক ইনকিলাব', url: 'dailyinqilab.com', status: 'active', type: 'national', lastCrawled: '2025-01-15T08:30:00Z', dailyArticles: 650, reliability: 88 },
+  { name: 'বিডিনিউজ২৪', url: 'bdnews24.com', status: 'active', type: 'online', lastCrawled: '2025-01-15T09:10:00Z', dailyArticles: 400, reliability: 94 },
+  { name: 'ঢাকা ট্রিবিউন', url: 'dhakatribune.com', status: 'active', type: 'online', lastCrawled: '2025-01-15T10:45:00Z', dailyArticles: 400, reliability: 89 }
+];
+
+const parties = [
+  'সব দল', 
+  'বাংলাদেশ আওয়ামী লীগ', 
+  'বাংলাদেশ জাতীয়তাবাদী দল',
+  'বাংলাদেশ জামায়াতে ইসলামী',
+  'জাতীয় পার্টি',
+  'জাতীয় সমাজতান্ত্রিক দল',
+  'বাংলাদেশের কমিউনিস্ট পার্টি',
+  'ইসলামী আন্দোলন বাংলাদেশ'
+];
+
+const timeRanges = ['সব সময়', 'গত ২৪ ঘন্টা', 'গত ৭ দিন', 'গত ৩০ দিন', 'গত ৬ মাস', 'গত ১ বছর'];
+const divisionList = ['সব বিভাগ', ...Object.keys(divisions)];
+
+export default function ViolenceTracker() {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [selectedParty, setSelectedParty] = useState('সব দল');
+  const [selectedTimeRange, setSelectedTimeRange] = useState('সব সময়');
+  const [selectedDivision, setSelectedDivision] = useState('সব বিভাগ');
+  const [selectedDistrict, setSelectedDistrict] = useState('সব জেলা');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [sortBy, setSortBy] = useState('date'); // 'date', 'severity', 'casualties'
+
+  const availableDistricts = useMemo(() => {
+    if (selectedDivision === 'সব বিভাগ') {
+      return ['সব জেলা', ...Object.values(divisions).flat()];
+    }
+    return ['সব জেলা', ...divisions[selectedDivision]];
+  }, [selectedDivision]);
+
+  const filteredIncidents = useMemo(() => {
+    let filtered = mockIncidents;
+    
+    // Apply filters
+    if (selectedParty !== 'সব দল') {
+      filtered = filtered.filter(incident => incident.party === selectedParty);
+    }
+    
+    if (selectedDivision !== 'সব বিভাগ') {
+      filtered = filtered.filter(incident => incident.division === selectedDivision);
+    }
+    
+    if (selectedDistrict !== 'সব জেলা') {
+      filtered = filtered.filter(incident => incident.district === selectedDistrict);
+    }
+    
+    if (selectedTimeRange !== 'সব সময়') {
+      const now = new Date();
+      const filterDate = new Date();
+      
+      switch (selectedTimeRange) {
+        case 'গত ২৪ ঘন্টা':
+          filterDate.setDate(now.getDate() - 1);
+          break;
+        case 'গত ৭ দিন':
+          filterDate.setDate(now.getDate() - 7);
+          break;
+        case 'গত ৩০ দিন':
+          filterDate.setDate(now.getDate() - 30);
+          break;
+        case 'গত ৬ মাস':
+          filterDate.setMonth(now.getMonth() - 6);
+          break;
+        case 'গত ১ বছর':
+          filterDate.setFullYear(now.getFullYear() - 1);
+          break;
+      }
+      
+      filtered = filtered.filter(incident => new Date(incident.date) >= filterDate);
+    }
+    
+    // Apply search
+    if (searchQuery) {
+      filtered = filtered.filter(incident => 
+        incident.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        incident.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        incident.party.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        incident.tags?.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+    
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'date':
+          return new Date(b.date).getTime() - new Date(a.date).getTime();
+        case 'severity':
+          const severityOrder = { high: 3, medium: 2, low: 1 };
+          return severityOrder[b.severity] - severityOrder[a.severity];
+        case 'casualties':
+          return (b.killed + b.injured) - (a.killed + a.injured);
+        default:
+          return 0;
+      }
+    });
+    
+    return filtered;
+  }, [selectedParty, selectedTimeRange, selectedDivision, selectedDistrict, searchQuery, sortBy]);
+
+  const statistics = useMemo(() => {
+    const totalIncidents = filteredIncidents.length;
+    const totalKilled = filteredIncidents.reduce((sum, incident) => sum + incident.killed, 0);
+    const totalInjured = filteredIncidents.reduce((sum, incident) => sum + incident.injured, 0);
+    const avgSeverity = filteredIncidents.length > 0 ? filteredIncidents.reduce((sum, incident) => {
+      const severityScore = incident.severity === 'high' ? 3 : incident.severity === 'medium' ? 2 : 1;
+      return sum + severityScore;
+    }, 0) / totalIncidents : 0;
+    
+    const avgConfidence = filteredIncidents.length > 0 ? filteredIncidents.reduce((sum, incident) => sum + incident.aiAnalysis.confidence, 0) / filteredIncidents.length : 0;
+    
+    const highSeverityCount = filteredIncidents.filter(i => i.severity === 'high').length;
+    const mediumSeverityCount = filteredIncidents.filter(i => i.severity === 'medium').length;
+    const lowSeverityCount = filteredIncidents.filter(i => i.severity === 'low').length;
+    
+    return { 
+      totalIncidents, 
+      totalKilled, 
+      totalInjured, 
+      avgSeverity, 
+      avgConfidence,
+      highSeverityCount,
+      mediumSeverityCount,
+      lowSeverityCount
+    };
+  }, [filteredIncidents]);
+
+  const chartData = useMemo(() => {
+    const partyData = parties.slice(1).map(party => ({
+      name: party.length > 20 ? party.substring(0, 20) + '...' : party,
+      fullName: party,
+      incidents: mockIncidents.filter(incident => incident.party === party).length,
+      killed: mockIncidents.filter(incident => incident.party === party).reduce((sum, incident) => sum + incident.killed, 0),
+      injured: mockIncidents.filter(incident => incident.party === party).reduce((sum, incident) => sum + incident.injured, 0)
+    })).filter(party => party.incidents > 0);
+    
+    return partyData.sort((a, b) => b.incidents - a.incidents);
+  }, []);
+
+  const timelineData = useMemo(() => {
+    const timeline = {};
+    mockIncidents.forEach(incident => {
+      const date = incident.date;
+      if (!timeline[date]) {
+        timeline[date] = { date, incidents: 0, killed: 0, injured: 0 };
+      }
+      timeline[date].incidents++;
+      timeline[date].killed += incident.killed;
+      timeline[date].injured += incident.injured;
+    });
+    
+    return Object.values(timeline).sort((a, b) => a.date.localeCompare(b.date));
+  }, []);
+
+  const severityData = [
+    { name: 'উচ্চ', value: statistics.highSeverityCount, color: '#dc2626' },
+    { name: 'মধ্যম', value: statistics.mediumSeverityCount, color: '#f97316' },
+    { name: 'নিম্ন', value: statistics.lowSeverityCount, color: '#facc15' }
+  ];
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsRefreshing(false);
+  };
+
+  const getSeverityColor = (severity) => {
+    switch (severity) {
+      case 'high': return 'bg-red-600 text-white';
+      case 'medium': return 'bg-orange-500 text-white';
+      case 'low': return 'bg-yellow-500 text-black';
+      default: return 'bg-gray-500 text-white';
+    }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'active': return 'bg-green-500';
+      case 'error': return 'bg-red-500';
+      case 'processing': return 'bg-yellow-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const IncidentCard = ({ incident, isCompact = false }) => (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Card className={`cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-[1.02] ${
+          incident.severity === 'high' ? 'border-l-4 border-l-red-600' : 
+          incident.severity === 'medium' ? 'border-l-4 border-l-orange-500' : 
+          'border-l-4 border-l-yellow-500'
+        }`}>
+          <CardContent className={`p-4 ${isCompact ? 'space-y-2' : 'space-y-3'}`}>
+            <div className="flex justify-between items-start">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge className={`text-xs ${getSeverityColor(incident.severity)}`}>
+                    {incident.severity === 'high' ? 'উচ্চ' : incident.severity === 'medium' ? 'মধ্যম' : 'নিম্ন'}
+                  </Badge>
+                  <Badge variant="outline" className="text-xs">
+                    {incident.newsSource}
+                  </Badge>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(incident.date).toLocaleDateString('bn-BD')}
+                  </span>
+                </div>
+                <h4 className="font-medium text-sm mb-1">{incident.location}</h4>
+                <p className={`text-gray-600 text-sm ${isCompact ? 'line-clamp-2' : 'line-clamp-3'}`}>
+                  {incident.description}
+                </p>
+                <div className="flex items-center gap-4 mt-2 text-xs">
+                  <span className="flex items-center gap-1 text-red-600">
+                    <Users className="h-3 w-3" />
+                    {incident.killed} নিহত
+                  </span>
+                  <span className="flex items-center gap-1 text-orange-600">
+                    <Users className="h-3 w-3" />
+                    {incident.injured} আহত
+                  </span>
+                  <span className="flex items-center gap-1 text-blue-600">
+                    <Bot className="h-3 w-3" />
+                    {Math.round(incident.aiAnalysis.confidence * 100)}%
+                  </span>
+                </div>
+                {incident.tags && (
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    {incident.tags.slice(0, 3).map((tag, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-xs px-2 py-0.5">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="ml-3 flex flex-col items-end gap-2">
+                <Badge variant="outline" className="text-xs whitespace-nowrap">
+                  {incident.party.length > 15 ? incident.party.substring(0, 15) + '...' : incident.party}
+                </Badge>
+                {incident.images && incident.images.length > 0 && (
+                  <Camera className="h-4 w-4 text-gray-400" />
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-red-600" />
+            ঘটনার বিস্তারিত তথ্য
+            <Badge className={getSeverityColor(incident.severity)}>
+              {incident.severity === 'high' ? 'উচ্চ তীব্রতা' : incident.severity === 'medium' ? 'মধ্যম তীব্রতা' : 'নিম্ন তীব্রতা'}
+            </Badge>
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-6">
+          {/* Location & Basic Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-sm text-gray-700 mb-2">স্থান ও সময়</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-gray-500" />
+                    <span>{incident.location}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <span>{new Date(incident.date).toLocaleDateString('bn-BD')}</span>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    <p>বিভাগ: {incident.division} | জেলা: {incident.district}</p>
+                    <p>উপজেলা: {incident.upazila} | থানা: {incident.policeStation}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-sm text-gray-700 mb-2">হতাহতের সংখ্যা</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-red-50 p-3 rounded-lg text-center">
+                    <div className="text-2xl font-bold text-red-600">{incident.killed}</div>
+                    <div className="text-xs text-red-700">নিহত</div>
+                  </div>
+                  <div className="bg-orange-50 p-3 rounded-lg text-center">
+                    <div className="text-2xl font-bold text-orange-600">{incident.injured}</div>
+                    <div className="text-xs text-orange-700">আহত</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-sm text-gray-700 mb-2">রাজনৈতিক তথ্য</h4>
+                <div className="space-y-2">
+                  <Badge variant="outline" className="w-full justify-center py-2">
+                    {incident.party}
+                  </Badge>
+                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                    <p><strong>সহিংসতার ধরণ:</strong> {incident.aiAnalysis.extractedInfo.violenceType}</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="font-semibold text-sm text-gray-700 mb-2">সূত্র ও বিশ্বস্ততা</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span>নিউজ সূত্র:</span>
+                    <Badge variant="outline">{incident.newsSource}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>AI নির্ভরযোগ্যতা:</span>
+                    <div className="flex items-center gap-2">
+                      <Progress value={incident.aiAnalysis.confidence * 100} className="w-16 h-2" />
+                      <span className="text-xs">{Math.round(incident.aiAnalysis.confidence * 100)}%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Description */}
+          <div>
+            <h4 className="font-semibold text-sm text-gray-700 mb-2">ঘটনার বিবরণ</h4>
+            <p className="text-sm text-gray-600 leading-relaxed bg-gray-50 p-4 rounded-lg">
+              {incident.description}
+            </p>
+          </div>
+          
+          {/* AI Analysis */}
+          <div>
+            <h4 className="font-semibold text-sm text-gray-700 mb-2">AI বিশ্লেষণ</h4>
+            <div className="bg-blue-50 p-4 rounded-lg space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p><strong>মূল শব্দ:</strong> {incident.aiAnalysis.keyEntities.join(', ')}</p>
+                  <p><strong>আবেগ বিশ্লেষণ:</strong> {
+                    incident.aiAnalysis.sentiment === 'very_negative' ? 'অত্যন্ত নেতিবাচক' :
+                    incident.aiAnalysis.sentiment === 'negative' ? 'নেতিবাচক' : 'নিরপেক্ষ'
+                  }</p>
+                </div>
+                <div>
+                  <p><strong>স্থান নির্ভরযোগ্যতা:</strong> {Math.round(incident.aiAnalysis.extractedInfo.locationConfidence * 100)}%</p>
+                  <p><strong>দল নির্ভরযোগ্যতা:</strong> {Math.round(incident.aiAnalysis.extractedInfo.partyConfidence * 100)}%</p>
+                </div>
+              </div>
+              <div className="text-xs text-blue-700">
+                <p>প্রক্রিয়াকৃত: {new Date(incident.aiAnalysis.processedAt).toLocaleString('bn-BD')}</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Additional Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {incident.witnesses && (
+              <div>
+                <h4 className="font-semibold text-sm text-gray-700 mb-2">প্রত্যক্ষদর্শী</h4>
+                <div className="space-y-1">
+                  {incident.witnesses.map((witness, idx) => (
+                    <Badge key={idx} variant="secondary" className="mr-2 mb-1">
+                      {witness}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {incident.policeResponse && (
+              <div>
+                <h4 className="font-semibold text-sm text-gray-700 mb-2">পুলিশের পদক্ষেপ</h4>
+                <p className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                  {incident.policeResponse}
+                </p>
+              </div>
+            )}
+          </div>
+          
+          {/* Images */}
+          {incident.images && incident.images.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-sm text-gray-700 mb-2">সংগৃহীত ছবি</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {incident.images.map((img, idx) => (
+                  <img 
+                    key={idx} 
+                    src={img} 
+                    alt={`ঘটনার ছবি ${idx + 1}`} 
+                    className="w-full h-48 object-cover rounded-lg border"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Tags */}
+          {incident.tags && (
+            <div>
+              <h4 className="font-semibold text-sm text-gray-700 mb-2">ট্যাগসমূহ</h4>
+              <div className="flex flex-wrap gap-2">
+                {incident.tags.map((tag, idx) => (
+                  <Badge key={idx} variant="outline" className="text-xs">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="max-w-7xl mx-auto p-4 space-y-6">
+        {/* Header */}
+        <div className="text-center space-y-4 py-8">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 rounded-full text-sm">
+            <AlertTriangle className="h-4 w-4" />
+            <span>লাইভ মনিটরিং সিস্টেম</span>
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            রাজনৈতিক নৃশংসতা ট্র্যাকার
+          </h1>
+          <p className="text-gray-600 max-w-2xl mx-auto">
+            বাংলাদেশের রাজনৈতিক সহিংসতার রিয়েল-টাইম ম্যাপিং ও AI-চালিত বিশ্লেষণ। 
+            স্বচ্ছতা ও জবাবদিহিতার মাধ্যমে শান্তিপূর্ণ সমাজ গড়ার প্রত্যাশায়।
+          </p>
+          
+          <div className="flex justify-center items-center gap-6 text-sm text-gray-500">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span>লাইভ</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Bot className="h-4 w-4" />
+              <span>AI বিশ্লেষণ</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              <span>২৪/৭ মনিটরিং</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Database className="h-4 w-4" />
+              <span>{newsSources.length}+ সূত্র</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-4 rounded-xl shadow-sm border">
+          <div className="flex items-center gap-4">
+            <Button 
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              {isRefreshing ? 'আপডেট হচ্ছে...' : 'রিফ্রেশ'}
+            </Button>
+            <div className="flex items-center gap-2">
+              <Bell className="h-4 w-4 text-gray-500" />
+              <span className="text-sm text-gray-600">সর্বশেষ আপডেট: ২ মিনিট আগে</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              রিপোর্ট
+            </Button>
+            <Button variant="outline" size="sm">
+              <Share2 className="h-4 w-4 mr-2" />
+              শেয়ার
+            </Button>
+          </div>
+        </div>
+
+        {/* Main Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4 lg:w-fit lg:grid-cols-4">
+            <TabsTrigger value="dashboard" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              <span className="hidden sm:inline">ড্যাশবোর্ড</span>
+            </TabsTrigger>
+            <TabsTrigger value="map" className="flex items-center gap-2">
+              <Map className="h-4 w-4" />
+              <span className="hidden sm:inline">মানচিত্র</span>
+            </TabsTrigger>
+            <TabsTrigger value="incidents" className="flex items-center gap-2">
+              <List className="h-4 w-4" />
+              <span className="hidden sm:inline">ঘটনাসমূহ</span>
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <PieChart className="h-4 w-4" />
+              <span className="hidden sm:inline">বিশ্লেষণ</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Dashboard Tab */}
+          <TabsContent value="dashboard" className="space-y-6">
+            {/* Statistics Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-blue-600 opacity-5"></div>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-700">মোট ঘটনা</CardTitle>
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <TrendingUp className="h-4 w-4 text-blue-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-gray-900">{statistics.totalIncidents}</div>
+                  <p className="text-xs text-green-600 mt-1">↗ +২০% গত সপ্তাহে</p>
+                  <Progress value={75} className="h-1 mt-3" />
+                </CardContent>
+              </Card>
+              
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-600 opacity-5"></div>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-700">নিহত</CardTitle>
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <Users className="h-4 w-4 text-red-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-red-600">{statistics.totalKilled}</div>
+                  <p className="text-xs text-red-600 mt-1">মোট মৃত্যুর সংখ্যা</p>
+                  <Progress value={60} className="h-1 mt-3" />
+                </CardContent>
+              </Card>
+              
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-500 to-orange-600 opacity-5"></div>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-700">আহত</CardTitle>
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <Users className="h-4 w-4 text-orange-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-orange-600">{statistics.totalInjured}</div>
+                  <p className="text-xs text-orange-600 mt-1">মোট আহতের সংখ্যা</p>
+                  <Progress value={85} className="h-1 mt-3" />
+                </CardContent>
+              </Card>
+
+              <Card className="relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-purple-600 opacity-5"></div>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium text-gray-700">AI নির্ভরযোগ্যতা</CardTitle>
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Bot className="h-4 w-4 text-purple-600" />
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold text-purple-600">{Math.round(statistics.avgConfidence * 100)}%</div>
+                  <p className="text-xs text-purple-600 mt-1">গড় নির্ভরযোগ্যতা</p>
+                  <Progress value={statistics.avgConfidence * 100} className="h-1 mt-3" />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Quick Charts */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    দলভিত্তিক ঘটনার সংখ্যা
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={chartData.slice(0, 5)}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="name" fontSize={12} />
+                      <YAxis />
+                      <Tooltip />
+                      <Bar dataKey="incidents" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChart className="h-5 w-5" />
+                    তীব্রতার বন্টন
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={severityData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={120}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {severityData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="flex justify-center gap-4 mt-4">
+                    {severityData.map((item, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                        <span className="text-sm">{item.name}: {item.value}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Recent Incidents */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Clock className="h-5 w-5" />
+                    সাম্প্রতিক ঘটনাসমূহ
+                  </span>
+                  <Button variant="outline" size="sm" onClick={() => setActiveTab('incidents')}>
+                    সব দেখুন
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {mockIncidents.slice(0, 3).map(incident => (
+                    <IncidentCard key={incident.id} incident={incident} isCompact={true} />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Map Tab */}
+          <TabsContent value="map" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  ইন্টারঅ্যাক্টিভ মানচিত্র
+                  <Badge variant="outline" className="ml-2">
+                    {filteredIncidents.length} ঘটনা
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="relative h-[600px] bg-gradient-to-br from-green-100 to-blue-100 rounded-lg overflow-hidden border-2 border-dashed border-gray-300">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <div className="p-6 bg-white rounded-full shadow-lg">
+                        <MapPin className="h-16 w-16 mx-auto text-blue-600" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">ইন্টারঅ্যাক্টিভ মানচিত্র</h3>
+                        <p className="text-gray-500 max-w-md">
+                          বাংলাদেশের মানচিত্রে রাজনৈতিক সহিংসতার ঘটনাসমূহ দেখার জন্য 
+                          এখানে একটি সম্পূর্ণ ইন্টারঅ্যাক্টিভ ম্যাপ থাকবে
+                        </p>
+                      </div>
+                      <div className="flex justify-center gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-red-600"></div>
+                          <span>উচ্চ তীব্রতা</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-orange-500"></div>
+                          <span>মধ্যম তীব্রতা</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                          <span>নিম্ন তীব্রতা</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Incidents Tab */}
+          <TabsContent value="incidents" className="space-y-6">
+            {/* Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <Filter className="h-5 w-5" />
+                    ফিল্টার ও সার্চ
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+                  >
+                    {showAdvancedFilters ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    উন্নত ফিল্টার
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="স্থান, বিবরণ, দল বা ট্যাগ অনুসন্ধান করুন..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                {/* Basic Filters */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <Select value={selectedTimeRange} onValueChange={setSelectedTimeRange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="সময়কাল" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {timeRanges.map(range => (
+                        <SelectItem key={range} value={range}>{range}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={selectedDivision} onValueChange={(value) => {
+                    setSelectedDivision(value);
+                    setSelectedDistrict('সব জেলা');
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="বিভাগ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {divisionList.map(division => (
+                        <SelectItem key={division} value={division}>{division}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={selectedParty} onValueChange={setSelectedParty}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="রাজনৈতিক দল" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {parties.map(party => (
+                        <SelectItem key={party} value={party}>{party}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="সাজানো" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="date">তারিখ অনুযায়ী</SelectItem>
+                      <SelectItem value="severity">তীব্রতা অনুযায়ী</SelectItem>
+                      <SelectItem value="casualties">হতাহত অনুযায়ী</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Advanced Filters */}
+                {showAdvancedFilters && (
+                  <div className="border-t pt-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="জেলা" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableDistricts.map(district => (
+                            <SelectItem key={district} value={district}>{district}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm font-medium">ভিউ মোড:</span>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant={viewMode === 'grid' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setViewMode('grid')}
+                          >
+                            <Grid className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant={viewMode === 'list' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => setViewMode('list')}
+                          >
+                            <List className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Results Summary */}
+            <div className="flex items-center justify-between bg-white p-4 rounded-lg border">
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-600">
+                  <strong>{filteredIncidents.length}</strong> টি ঘটনা পাওয়া গেছে
+                </span>
+                {searchQuery && (
+                  <Badge variant="secondary">
+                    সার্চ: "{searchQuery}"
+                  </Badge>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedParty('সব দল');
+                  setSelectedTimeRange('সব সময়');
+                  setSelectedDivision('সব বিভাগ');
+                  setSelectedDistrict('সব জেলা');
+                }}
+              >
+                ফিল্টার রিসেট
+              </Button>
+            </div>
+
+            {/* Incidents List/Grid */}
+            <div className={`${
+              viewMode === 'grid' 
+                ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' 
+                : 'space-y-4'
+            }`}>
+              {filteredIncidents.length > 0 ? (
+                filteredIncidents.map(incident => (
+                  <IncidentCard key={incident.id} incident={incident} isCompact={viewMode === 'list'} />
+                ))
+              ) : (
+                <Card className="col-span-full">
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <Search className="h-12 w-12 text-gray-400 mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-600 mb-2">কোনো ঘটনা পাওয়া যায়নি</h3>
+                    <p className="text-gray-500 text-center">
+                      আপনার সার্চ বা ফিল্টার অনুযায়ী কোনো ঘটনা খুঁজে পাওয়া যায়নি। 
+                      অনুগ্রহ করে ভিন্ন ফিল্টার ব্যবহার করে দেখুন।
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* Analytics Tab */}
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Timeline Chart */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>সময়ভিত্তিক ট্রেন্ড</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={timelineData}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="date" />
+                      <YAxis />
+                      <Tooltip />
+                      <Area type="monotone" dataKey="incidents" stackId="1" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.6} />
+                      <Area type="monotone" dataKey="killed" stackId="2" stroke="#ef4444" fill="#ef4444" fillOpacity={0.6} />
+                      <Area type="monotone" dataKey="injured" stackId="3" stroke="#f97316" fill="#f97316" fillOpacity={0.6} />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* News Sources Status */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>নিউজ সূত্রের অবস্থা</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ScrollArea className="h-80">
+                    <div className="space-y-3">
+                      {newsSources.map((source, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium text-sm">{source.name}</span>
+                              <Badge className={`text-xs ${
+                                source.type === 'national' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                              }`}>
+                                {source.type === 'national' ? 'জাতীয়' : 'অনলাইন'}
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              <p>দৈনিক: {source.dailyArticles} আর্টিকেল</p>
+                              <p>নির্ভরযোগ্যতা: {source.reliability}%</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className={`w-2 h-2 rounded-full ${getStatusColor(source.status)}`}></div>
+                            <Progress value={source.reliability} className="w-16 h-2" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* More Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-center">সিস্টেম পারফরমেন্স</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-green-600">98.5%</div>
+                    <p className="text-sm text-gray-600">আপটাইম</p>
+                  </div>
+                  <Separator />
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm">ক্রল সফলতার হার</span>
+                      <span className="text-sm font-medium">97.8%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">গড় প্রক্রিয়াকরণ সময়</span>
+                      <span className="text-sm font-medium">2.3 সেকেন্ড</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">দৈনিক আর্টিকেল</span>
+                      <span className="text-sm font-medium">12,000+</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-center">AI বিশ্লেষণ</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-purple-600">{Math.round(statistics.avgConfidence * 100)}%</div>
+                    <p className="text-sm text-gray-600">গড় নির্ভরযোগ্যতা</p>
+                  </div>
+                  <Separator />
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm">স্থান শনাক্তকরণ</span>
+                      <span className="text-sm font-medium">96%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">দল শনাক্তকরণ</span>
+                      <span className="text-sm font-medium">92%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">তীব্রতা নির্ধারণ</span>
+                      <span className="text-sm font-medium">89%</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-center">দ্রুত পরিসংখ্যান</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-600">{mockIncidents.length}</div>
+                    <p className="text-sm text-gray-600">মোট ঘটনা</p>
+                  </div>
+                  <Separator />
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm">এই সপ্তাহে</span>
+                      <span className="text-sm font-medium">৮টি ঘটনা</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">গড় দৈনিক</span>
+                      <span className="text-sm font-medium">১.২টি ঘটনা</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">সর্বোচ্চ একদিনে</span>
+                      <span className="text-sm font-medium">৫টি ঘটনা</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  );
+}

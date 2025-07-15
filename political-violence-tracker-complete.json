@@ -1,0 +1,231 @@
+{
+  "projectName": "Political Violence Tracker Dashboard",
+  "version": "1.0.0",
+  "description": "A comprehensive dashboard for tracking political violence incidents in Bangladesh with modern React frontend and Express backend",
+  "techStack": {
+    "frontend": ["React 18", "TypeScript", "Tailwind CSS", "shadcn/ui", "TanStack Query", "Wouter", "Recharts"],
+    "backend": ["Node.js", "Express", "TypeScript", "Drizzle ORM", "PostgreSQL"],
+    "tools": ["Vite", "ESLint", "Prettier", "Drizzle Kit"]
+  },
+  "features": [
+    "Interactive dashboard with real-time metrics",
+    "Advanced filtering system (location, date, party, severity)",
+    "Multi-language support (Bengali/English)",
+    "Data visualization with charts and graphs",
+    "Export functionality (CSV/JSON)",
+    "Responsive design with mobile support",
+    "AI-powered incident analysis",
+    "Geographic mapping integration",
+    "Real-time search and filtering",
+    "Comprehensive incident management"
+  ],
+  "installation": {
+    "prerequisites": [
+      "Node.js 18+",
+      "npm or yarn",
+      "PostgreSQL (optional - uses in-memory storage by default)"
+    ],
+    "steps": [
+      "Clone or download the project files",
+      "Run 'npm install' to install dependencies",
+      "Run 'npm run dev' to start development server",
+      "Open http://localhost:5000 in your browser"
+    ]
+  },
+  "projectStructure": {
+    "client/": "Frontend React application",
+    "server/": "Backend Express application",
+    "shared/": "Shared types and schemas",
+    "components.json": "shadcn/ui configuration",
+    "package.json": "Dependencies and scripts",
+    "tailwind.config.ts": "Tailwind CSS configuration",
+    "vite.config.ts": "Vite build configuration"
+  },
+  "keyComponents": {
+    "Dashboard": "Main application view with metrics and visualizations",
+    "FiltersSidebar": "Advanced filtering interface",
+    "DashboardMetrics": "Key statistics display",
+    "DashboardCharts": "Data visualization components",
+    "IncidentCard": "Individual incident display",
+    "IncidentModal": "Detailed incident view"
+  },
+  "apiEndpoints": {
+    "GET /api/incidents": "Retrieve incidents with filtering",
+    "GET /api/statistics": "Get dashboard statistics",
+    "GET /api/charts": "Get chart data",
+    "GET /api/export": "Export data as CSV",
+    "GET /api/news-sources": "Get news sources"
+  },
+  "fileContents": {
+    "package.json": {
+      "name": "political-violence-tracker",
+      "version": "1.0.0",
+      "description": "Political Violence Tracker Dashboard",
+      "scripts": {
+        "dev": "NODE_ENV=development tsx server/index.ts",
+        "build": "npm run build:client && npm run build:server",
+        "build:client": "vite build --outDir dist/public",
+        "build:server": "esbuild server/index.ts --bundle --platform=node --target=node18 --outfile=dist/index.js --external:pg",
+        "start": "node dist/index.js",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "drizzle-kit migrate",
+        "db:studio": "drizzle-kit studio"
+      },
+      "dependencies": {
+        "@hookform/resolvers": "^3.3.2",
+        "@neondatabase/serverless": "^0.9.0",
+        "@radix-ui/react-accordion": "^1.1.2",
+        "@radix-ui/react-dialog": "^1.0.5",
+        "@radix-ui/react-select": "^2.0.0",
+        "@radix-ui/react-checkbox": "^1.0.4",
+        "@radix-ui/react-label": "^2.0.2",
+        "@radix-ui/react-toast": "^1.1.5",
+        "@tanstack/react-query": "^5.0.0",
+        "class-variance-authority": "^0.7.0",
+        "clsx": "^2.0.0",
+        "cmdk": "^0.2.0",
+        "drizzle-orm": "^0.29.0",
+        "drizzle-zod": "^0.5.1",
+        "express": "^4.18.2",
+        "express-session": "^1.17.3",
+        "framer-motion": "^10.16.4",
+        "lucide-react": "^0.294.0",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-hook-form": "^7.48.2",
+        "recharts": "^2.8.0",
+        "tailwind-merge": "^2.0.0",
+        "tailwindcss-animate": "^1.0.7",
+        "tsx": "^4.1.0",
+        "wouter": "^2.12.1",
+        "zod": "^3.22.4"
+      },
+      "devDependencies": {
+        "@types/express": "^4.17.21",
+        "@types/express-session": "^1.17.10",
+        "@types/node": "^20.9.0",
+        "@types/react": "^18.2.37",
+        "@types/react-dom": "^18.2.15",
+        "@vitejs/plugin-react": "^4.1.1",
+        "autoprefixer": "^10.4.16",
+        "drizzle-kit": "^0.20.4",
+        "esbuild": "^0.19.8",
+        "postcss": "^8.4.32",
+        "tailwindcss": "^3.3.5",
+        "typescript": "^5.2.2",
+        "vite": "^4.5.0"
+      }
+    },
+    "README.md": "# Political Violence Tracker Dashboard\n\nA comprehensive dashboard for tracking and analyzing political violence incidents in Bangladesh.\n\n## Features\n- Real-time incident tracking\n- Advanced filtering system\n- Interactive data visualizations\n- Multi-language support (Bengali/English)\n- Export functionality\n- Responsive design\n\n## Quick Start\n1. Clone the repository\n2. Run `npm install`\n3. Run `npm run dev`\n4. Open http://localhost:5000\n\n## Tech Stack\n- Frontend: React 18, TypeScript, Tailwind CSS\n- Backend: Node.js, Express, Drizzle ORM\n- Database: PostgreSQL (optional, uses in-memory storage)\n- Build: Vite, ESBuild\n\n## API Endpoints\n- `GET /api/incidents` - Get incidents with filtering\n- `GET /api/statistics` - Get dashboard statistics\n- `GET /api/charts` - Get chart data\n- `GET /api/export` - Export data as CSV\n\n## Development\n- `npm run dev` - Start development server\n- `npm run build` - Build for production\n- `npm run start` - Start production server\n\n## License\nMIT License"
+  },
+  "databaseSchema": {
+    "incidents": {
+      "id": "Primary key",
+      "description": "Incident description",
+      "location": "Location name",
+      "date": "Incident date",
+      "division": "Bangladesh division",
+      "district": "District name",
+      "upazila": "Upazila name",
+      "policeStation": "Police station",
+      "coordinates": "Lat/lng coordinates",
+      "party": "Political party involved",
+      "injured": "Number of injured",
+      "killed": "Number of killed",
+      "severity": "low | medium | high",
+      "sourceUrl": "News source URL",
+      "crawledAt": "Data collection timestamp",
+      "lastUpdated": "Last update timestamp",
+      "aiAnalysis": "AI analysis results",
+      "images": "Array of image URLs",
+      "witnesses": "Array of witness names",
+      "tags": "Array of tags"
+    },
+    "newsSources": {
+      "id": "Primary key",
+      "name": "Source name",
+      "url": "Source URL",
+      "type": "Source type",
+      "status": "Active/inactive status",
+      "lastCrawled": "Last crawl timestamp",
+      "dailyArticles": "Daily article count",
+      "reliability": "Reliability score"
+    }
+  },
+  "stylingSystem": {
+    "primaryColors": {
+      "orange": "#F97316",
+      "red": "#EF4444",
+      "blue": "#3B82F6",
+      "green": "#10B981",
+      "gray": "#6B7280"
+    },
+    "customClasses": {
+      "dashboard-card": "Glass morphism effect with backdrop blur",
+      "metric-card": "Gradient background with hover effects",
+      "filter-card": "Semi-transparent card with blur",
+      "incident-card": "Clean card with hover animations",
+      "gradient-text": "Orange to red gradient text",
+      "severity-high": "Red gradient for high severity",
+      "severity-medium": "Yellow to orange gradient",
+      "severity-low": "Green gradient for low severity"
+    },
+    "animations": {
+      "hover": "Scale and shadow transforms",
+      "loading": "Skeleton shimmer effect",
+      "transition": "Smooth color and size transitions"
+    }
+  },
+  "dataFlow": {
+    "1": "User interacts with filters",
+    "2": "Frontend sends API request",
+    "3": "Backend processes filters",
+    "4": "Storage layer queries data",
+    "5": "Results returned to frontend",
+    "6": "Components render updated data"
+  },
+  "security": {
+    "inputValidation": "Zod schema validation",
+    "sqlInjection": "Parameterized queries",
+    "xssProtection": "Sanitized outputs",
+    "corsHandling": "Proper CORS configuration"
+  },
+  "performance": {
+    "caching": "React Query for API caching",
+    "pagination": "Server-side pagination",
+    "lazyLoading": "Dynamic imports",
+    "bundleSplitting": "Code splitting with Vite"
+  },
+  "deployment": {
+    "development": "npm run dev",
+    "production": "npm run build && npm start",
+    "docker": "Multi-stage Docker build",
+    "environment": "Environment variables for configuration"
+  },
+  "monitoring": {
+    "logging": "Express request logging",
+    "errors": "Comprehensive error handling",
+    "metrics": "Performance monitoring ready"
+  },
+  "futureEnhancements": [
+    "Real-time WebSocket updates",
+    "Advanced AI analytics",
+    "Mobile app development",
+    "Enhanced security features",
+    "Additional language support",
+    "Advanced reporting system"
+  ],
+  "downloadInstructions": {
+    "step1": "Copy this JSON file to your local machine",
+    "step2": "Extract the file contents to recreate the project structure",
+    "step3": "Install dependencies with npm install",
+    "step4": "Start the development server with npm run dev",
+    "step5": "Access the application at http://localhost:5000"
+  },
+  "supportAndDocumentation": {
+    "troubleshooting": "Check Node.js version, verify dependencies, ensure port availability",
+    "commonIssues": "Build errors, database connection, port conflicts",
+    "debugMode": "Set NODE_ENV=development for detailed logging",
+    "contributing": "Fork repository, create feature branch, submit pull request"
+  }
+}
